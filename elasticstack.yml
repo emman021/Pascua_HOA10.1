@@ -1,0 +1,37 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: Installing dnf
+    yum:
+      name:
+        - dnf
+    when: ansible_distribution == "CentOS"
+
+  - name: Update and upgrade remote CentOS server
+    dnf:
+      update_cache: yes
+      name:  "*"
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+- hosts: kibana_server
+  tags: kibana
+  become: true
+  roles:
+    - { role: kibana_server, target_ip: 192.168.56.107, ip_host: 192.168.56.108, gpg_key_kibana: https://artifacts.elastic.co/GPG-KEY-elasticsearch }
+
+- hosts: elasticsearch_server
+  tags: es
+  become: true
+  roles:
+    - { role: elasticsearch_server, ip_host: 192.168.56.107 }
+
+- hosts: logstash_server
+  tags: logstash
+  become: true
+  roles:
+    - role: logstash_server
+      gpg_key_logstash: https://artifacts.elastic.co/GPG-KEY-elasticsearch

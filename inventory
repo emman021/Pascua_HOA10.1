@@ -1,0 +1,8 @@
+[logstash_server]
+192.168.56.105
+
+[elasticsearch_server]
+192.168.56.107
+
+[kibana_server]
+192.168.56.108

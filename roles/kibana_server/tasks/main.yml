@@ -1,0 +1,49 @@
+- name: Downloading and installing public signing key
+  rpm_key:
+    state: present
+    key: "{{ gpg_key_kibana }}"
+
+- name: Adding kibana to the RPM repository
+  copy:
+    src: kibana.repo
+    dest: /etc/yum.repos.d/kibana.repo
+    owner: root
+    group: root
+    mode: 777
+
+- name: Updating the repository once again
+  yum:
+    name:
+      - kibana
+    state: latest
+
+- name: Cofiguring server.port
+  replace:
+    path: /etc/kibana/kibana.yml
+    regexp: '#server.port: 5601'
+    replace: 'server.port: 5601'
+
+- name: Cofiguring server.host
+  replace:
+    path: /etc/kibana/kibana.yml
+    regexp: '#server.host: "localhost"'
+    replace: 'server.host: "{{ ip_host }}"'
+
+- name: Cofiguring elasticsearch.hosts
+  replace:
+    path: /etc/kibana/kibana.yml
+    regexp: '#elasticsearch.hosts: ["http://localhost:9200"]'
+    replace: '"elasticsearch.hosts: ["http://{{ target_ip }}:9200"]"'
+
+- name: Opening port for elastic search
+  firewalld:
+    port: 5601/tcp
+    zone: public
+    permanent: yes
+    state: enabled
+
+- name: Making sure that Kibana is started and enabled
+  service:
+    name: kibana
+    state: restarted
+    enabled: true
